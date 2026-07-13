@@ -116,17 +116,36 @@ pub fn cacheHomeFor(arena: std.mem.Allocator, env: Env, os: std.Target.Os.Tag) E
 /// program that keeps its own answer for "no home in the environment" does not
 /// have to reimplement the rest of the resolution to use it.
 pub fn baseDirIn(
-    arena: std.mem.Allocator,
+    gpa: std.mem.Allocator,
     env: Env,
     os: std.Target.Os.Tag,
     base: Base,
     home_dir: []const u8,
 ) Error![]u8 {
-    if (env.get(arena, base.xdgName())) |v| return v;
-    if (os == .windows) {
-        if (env.get(arena, "LOCALAPPDATA")) |v| return v;
+    // The XDG spec calls a relative base invalid and says to ignore it. Honour
+    // that: returning it would hand back a path that resolves against whatever
+    // directory the process happens to be sitting in.
+    if (env.get(gpa, base.xdgName())) |v| {
+        if (isAbsoluteFor(os, v)) return v;
+        gpa.free(v);
     }
-    return path.joinRel(arena, home_dir, base.fallback());
+    if (os == .windows) {
+        if (env.get(gpa, "LOCALAPPDATA")) |v| {
+            if (isAbsoluteFor(os, v)) return v;
+            gpa.free(v);
+        }
+    }
+    return path.joinRel(gpa, home_dir, base.fallback());
+}
+
+/// Absolute by the named platform's rules, not the host's: `C:\x` is absolute
+/// on Windows and nowhere else, and a resolution pinned to one OS has to judge
+/// it the way that OS would.
+fn isAbsoluteFor(os: std.Target.Os.Tag, p: []const u8) bool {
+    return if (os == .windows)
+        std.fs.path.isAbsoluteWindows(p)
+    else
+        std.fs.path.isAbsolutePosix(p);
 }
 
 /// A base directory named for one application: `<base>/<app>`.
@@ -276,6 +295,18 @@ test "the *For forms pin every platform's answer from any host" {
     const posix_want = try std.fs.path.join(a, &.{ "/home/me", ".local", "share" });
     try testing.expectEqualStrings(posix_want, try dataHomeFor(a, env, .linux));
     try testing.expectEqualStrings(posix_want, try dataHomeFor(a, env, .macos));
+}
+
+test "a relative XDG base is invalid, and ignored" {
+    var arena = std.heap.ArenaAllocator.init(testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+
+    for ([_][]const u8{ "", "relative/cfg" }) |bad| {
+        const env = try envOf(a, &.{ .{ "HOME", "/home/me" }, .{ "XDG_CONFIG_HOME", bad } });
+        const want = try std.fs.path.join(a, &.{ "/home/me", ".config" });
+        try testing.expectEqualStrings(want, try configHomeFor(a, env, .linux));
+    }
 }
 
 test "XDG wins even on Windows" {
