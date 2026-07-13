@@ -31,4 +31,26 @@ pub fn build(b: *std.Build) void {
     });
     const docs_step = b.step("docs", "Generate API reference docs to zig-out/docs/");
     docs_step.dependOn(&docs_install.step);
+
+    // Runnable examples. `zig build example-NAME` runs each. They need a hosted
+    // I/O surface, so skip them where there is none.
+    if (target.result.os.tag != .freestanding and target.result.os.tag != .other) {
+        const examples_step = b.step("examples", "Build all examples");
+        inline for (.{"basic"}) |name| {
+            const exe = b.addExecutable(.{
+                .name = "example-" ++ name,
+                .root_module = b.createModule(.{
+                    .root_source_file = b.path("examples/" ++ name ++ ".zig"),
+                    .target = target,
+                    .optimize = optimize,
+                    .imports = &.{.{ .name = "env", .module = mod }},
+                }),
+            });
+            examples_step.dependOn(&b.addInstallArtifact(exe, .{}).step);
+
+            const run = b.addRunArtifact(exe);
+            const run_step = b.step("example-" ++ name, "Run the " ++ name ++ " example");
+            run_step.dependOn(&run.step);
+        }
+    }
 }

@@ -21,6 +21,10 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   nests under `~/.config` and `~/.local` and Windows under `%LOCALAPPDATA%`.
   `hostname` reads `COMPUTERNAME` on Windows, where `std.posix.gethostname`
   does not exist. `expandTilde`/`contractTilde` for `~`.
+- `configHomeFor` and its siblings resolve against a named OS rather than the
+  host's, so a program can pin every platform's answer from whichever one runs
+  its tests. `baseDirIn` takes a home already in hand, for a program that keeps
+  its own answer for an environment naming none.
 - `path`: `joinRel`, `joinSegments`, `toRel`, `relUnder`, keeping a
   `/`-delimited relative path (as config and repositories write it) apart from
   a native filesystem path, which `std.fs.path.join` does not distinguish.

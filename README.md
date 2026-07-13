@@ -82,3 +82,8 @@ exe.root_module.addImport("env", env_dep.module("env"));
 ```
 
 Requires Zig 0.16.0.
+
+## Reference
+
+Generated API docs: **https://sakakibara.github.io/env-zig/**, or `zig build docs`
+and open `zig-out/docs/index.html`.
