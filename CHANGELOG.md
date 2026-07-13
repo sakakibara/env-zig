@@ -6,6 +6,15 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-13
+
+### Fixed
+
+- A relative `XDG_*` base is invalid per the XDG spec and is now ignored rather
+  than returned, since it would resolve against whatever directory the process
+  happened to be sitting in. Absoluteness is judged by the OS the resolution is
+  pinned to, not the host's: `C:\x` is absolute on Windows and nowhere else.
+
 ## [0.1.0] - 2026-07-13
 
 ### Added
@@ -29,5 +38,6 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `/`-delimited relative path (as config and repositories write it) apart from
   a native filesystem path, which `std.fs.path.join` does not distinguish.
 
-[Unreleased]: https://github.com/sakakibara/env-zig/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/sakakibara/env-zig/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/sakakibara/env-zig/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/sakakibara/env-zig/releases/tag/v0.1.0
