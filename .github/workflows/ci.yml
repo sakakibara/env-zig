@@ -65,6 +65,12 @@ jobs:
           restore-keys: |
             zig-cache-${{ runner.os }}-${{ runner.arch }}-${{ env.ZIG_VERSION }}-
 
+      # Safe on Windows because .gitattributes checks the tree out with LF:
+      # Git for Windows would otherwise hand `zig fmt` CRLF and it would reject
+      # every file.
+      - name: zig fmt --check
+        run: zig fmt --check build.zig src examples
+
       - name: zig build test
         run: zig build test --summary all
 
