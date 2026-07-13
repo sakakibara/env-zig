@@ -45,6 +45,7 @@ injected case works the same everywhere.
 | --- | --- |
 | `Env` | `current()`, `getAlloc`, `get` (an empty value reads as unset), `createMap` for a child process |
 | `dirs` | `home`, `username`, `hostname`, `configHome`, `dataHome`, `stateHome`, `cacheHome`, `appDir`, `expandTilde`, `contractTilde` |
+| | `configHomeFor` and friends resolve against a named OS rather than the host's, so a test can pin every platform's answer from whichever one it runs on. `baseDirIn` takes a home already in hand, for a program that keeps its own answer for "no home in the environment". |
 | `path` | `joinRel`, `joinSegments`, `toRel`, `relUnder` |
 
 The XDG base directories are honoured on every platform, because a user who

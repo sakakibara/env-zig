@@ -40,7 +40,7 @@ pub const Env = union(enum) {
     /// An empty value is nearly always meant as "unset" -- an empty
     /// `XDG_CONFIG_HOME` must fall back to the default, not resolve to the
     /// current directory.
-    pub fn get(self: Env, arena: std.mem.Allocator, key: []const u8) ?[]const u8 {
+    pub fn get(self: Env, arena: std.mem.Allocator, key: []const u8) ?[]u8 {
         const v = self.getAlloc(arena, key) catch return null;
         return if (v.len == 0) null else v;
     }
